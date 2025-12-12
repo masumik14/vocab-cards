@@ -122,6 +122,8 @@
         }
 
         .controls {
+            width: 90%;
+            max-width: 500px;
             margin-top: 30px;
             display: flex;
             gap: 15px;
@@ -147,6 +149,54 @@
         button.secondary {
             background-color: #95a5a6;
         }
+    
+        
+        .top-controls {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .rate-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            background: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-width: 0; /* allow shrink within grid */
+        }
+
+        .rate-control input[type="range"] {
+            width: 180px;
+            max-width: 100%;
+        }
+
+        /* Top buttons: consistent height */
+        .top-controls button {
+            height: 44px;
+            padding: 0 22px;
+            white-space: nowrap;
+        }
+
+        /* Small screens: stack neatly */
+        @media (max-width: 420px) {
+            .top-controls {
+                grid-template-columns: 1fr 1fr;
+            }
+            .top-controls .rate-control {
+                grid-column: 1 / -1;
+            }
+            .top-controls button {
+                width: 100%;
+            }
+        }
+
     </style>
 </head>
 
@@ -157,7 +207,18 @@
         <input type="file" id="csvFile" accept=".csv" onchange="loadCSV(this)">
     </div>
 
-    <div class="card" onclick="flipCard()">
+    
+    <div class="controls top-controls">
+        <label class="rate-control">
+            Speed
+            <input type="range" min="0.6" max="1.0" step="0.05" value="0.8" oninput="setSpeechRate(this.value)">
+            <span id="rateValue">0.8</span>
+        </label>
+        <button class="secondary" onclick="shuffleCards()">シャッフル</button>
+        <button class="secondary" onclick="toggleQuizMode()">出題反転</button>
+    </div>
+
+<div class="card" onclick="flipCard()">
         <div class="label-badge" id="typeLabel">問題</div>
         <div class="speaker-icon" onclick="playAudio(event)">🔊</div>
         <div class="card-content" id="question">Loading...</div>
@@ -166,7 +227,7 @@
     </div>
 
     <div class="controls">
-        <button class="secondary" onclick="shuffleCards()">シャッフル</button>
+        <button class="secondary" onclick="prevCard()">戻る</button>
         <button onclick="nextCard()">次へ (Next)</button>
     </div>
 
@@ -192,7 +253,18 @@
         let currentIndex = 0;
         let isShowingAnswer = false;
 
-        // --- CSV読み込み処理 ---
+        
+        
+        // 読み上げ速度（スライダーで変更）
+        let speechRate = 0.8;
+        function setSpeechRate(v) {
+            speechRate = Number(v);
+            const el = document.getElementById('rateValue');
+            if (el) el.textContent = v;
+        }
+// 出題方向（auto=単語ごとのstartMode、en2ja=英→日固定、ja2en=日→英固定）
+        let quizMode = 'auto';
+// --- CSV読み込み処理 ---
         function loadCSV(input) {
             const file = input.files[0];
             if (!file) return;
@@ -247,7 +319,13 @@
             let answerText = "";
             let isJpQuestion = false;
 
-            if (item.startMode === 'jp') {
+            // 出題方向を決定（quizModeがautoの場合のみ、単語ごとのstartModeを使う）
+            let mode = quizMode;
+            if (mode === 'auto') {
+                mode = (item.startMode === 'jp') ? 'ja2en' : 'en2ja';
+            }
+
+            if (mode === 'ja2en') {
                 questionText = item.jp;
                 answerText = item.en;
                 isJpQuestion = true;
@@ -255,6 +333,7 @@
             } else {
                 questionText = item.en;
                 answerText = item.jp;
+                isJpQuestion = false;
                 labelEl.textContent = "英語 → 日本語";
             }
 
@@ -281,6 +360,16 @@
             updateDisplay();
         }
 
+        function prevCard() {
+            isShowingAnswer = false;
+            currentIndex--;
+            if (currentIndex < 0) {
+                currentIndex = currentList.length - 1;
+            }
+            updateDisplay();
+        }
+
+
         function shuffleCards() {
             for (let i = currentList.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -296,7 +385,22 @@
             updateDisplay();
         }
 
-        let speechPrimed = false;
+        
+        function toggleQuizMode() {
+            // auto → (現状に合わせて反転) → 以後は固定方向で反転
+            isShowingAnswer = false;
+
+            if (quizMode === 'auto') {
+                const item = currentList[currentIndex];
+                const current = (item && item.startMode === 'jp') ? 'ja2en' : 'en2ja';
+                quizMode = (current === 'ja2en') ? 'en2ja' : 'ja2en';
+            } else {
+                quizMode = (quizMode === 'ja2en') ? 'en2ja' : 'ja2en';
+            }
+            updateDisplay();
+        }
+
+let speechPrimed = false;
 
         function primeSpeechOnce() {
             // iPad/iPhone等で「最初の1回だけ無音」になりがちな挙動を避けるための最小prime
@@ -335,7 +439,7 @@
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            utterance.rate = 0.8; // 速度
+            utterance.rate = speechRate; // 速度
 
             // iPad/iPhoneで日本語混じりにならないよう、明示的に英語の声を探す（念のため）
             // ※環境により初回は空配列のことがあるため、見つかった時だけ適用
