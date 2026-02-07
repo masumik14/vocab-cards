@@ -149,8 +149,8 @@
         button.secondary {
             background-color: #95a5a6;
         }
-    
-        
+
+
         .top-controls {
             margin-bottom: 15px;
             display: grid;
@@ -168,8 +168,9 @@
             background: #fff;
             padding: 10px 14px;
             border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            min-width: 0; /* allow shrink within grid */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            min-width: 0;
+            /* allow shrink within grid */
         }
 
         .rate-control input[type="range"] {
@@ -189,14 +190,15 @@
             .top-controls {
                 grid-template-columns: 1fr 1fr;
             }
+
             .top-controls .rate-control {
                 grid-column: 1 / -1;
             }
+
             .top-controls button {
                 width: 100%;
             }
         }
-
     </style>
 </head>
 
@@ -207,7 +209,7 @@
         <input type="file" id="csvFile" accept=".csv" onchange="loadCSV(this)">
     </div>
 
-    
+
     <div class="controls top-controls">
         <label class="rate-control">
             Speed
@@ -218,7 +220,7 @@
         <button class="secondary" onclick="toggleQuizMode()">出題反転</button>
     </div>
 
-<div class="card" onclick="flipCard()">
+    <div class="card" onclick="flipCard()">
         <div class="label-badge" id="typeLabel">問題</div>
         <div class="speaker-icon" onclick="playAudio(event)">🔊</div>
         <div class="card-content" id="question">Loading...</div>
@@ -234,27 +236,27 @@
     <script>
         // ★★★ デフォルトデータ（ファイル読み込みがない場合に表示） ★★★
         const defaultData = [
-          { en: "parent or parents", jp: "親、[parentsで]両親", startMode: "en" },
-          { en: "relax or relaxed", jp: "くつろぐ", startMode: "jp" },
-          { en: "special", jp: "特別の", startMode: "jp" },
-          { en: "traditional", jp: "伝統的(でんとうてき)な", startMode: "en" },
-          { en: "care", jp: "世話", startMode: "jp" },
-          { en: "fell", jp: "fall（転ぶ）の過去形(かこけい)", startMode: "en" },
-          { en: "grandma", jp: "おばあちゃん", startMode: "en" },
-          { en: "hotel", jp: "ホテル、旅館", startMode: "en" },
-          { en: "miss", jp: "…がないのをさびしく思う", startMode: "jp" },
-          { en: "outside", jp: "外で[に、へ]", startMode: "jp" },
-          { en: "show or showing", jp: "…を見せる、示す(しめす)", startMode: "en" },
-          { en: "against", jp: "…に対抗(たいこう)して、反対して", startMode: "jp" },
-          { en: "another", jp: "ほかの、別の、ちがった", startMode: "jp" }
+            { en: "half", jp: "半分，2分の1", startMode: "jp" },
+            { en: "hope", jp: "（…を）望む，…だとよいと思う", startMode: "jp" },
+            { en: "lose", jp: "負ける", startMode: "jp" },
+            { en: "lost", jp: "lose（負ける）の過去形", startMode: "en" },
+            { en: "rookie or rookies", jp: "ルーキー，新人", startMode: "jp" },
+            { en: "were", jp: "are（…です）の過去形", startMode: "jp" },
+            { en: "campground", jp: "キャンプ場", startMode: "en" },
+            { en: "kitchen or kitchens", jp: "台所，調理場", startMode: "en" },
+            { en: "outdoor", jp: "屋外の，野外の", startMode: "en" },
+            { en: "pick or picked", jp: "…をつむ，もぐ", startMode: "en" },
+            { en: "set", jp: "…を準備する", startMode: "jp" },
+            { en: "set", jp: "set（準備する）の過去形", startMode: "en" },
+            { en: "shower or showers", jp: "シャワー", startMode: "jp" }
         ];
 
         let currentList = [...defaultData];
         let currentIndex = 0;
         let isShowingAnswer = false;
 
-        
-        
+
+
         // 読み上げ速度（スライダーで変更）
         let speechRate = 0.8;
         function setSpeechRate(v) {
@@ -262,9 +264,9 @@
             const el = document.getElementById('rateValue');
             if (el) el.textContent = v;
         }
-// 出題方向（auto=単語ごとのstartMode、en2ja=英→日固定、ja2en=日→英固定）
+        // 出題方向（auto=単語ごとのstartMode、en2ja=英→日固定、ja2en=日→英固定）
         let quizMode = 'auto';
-// --- CSV読み込み処理 ---
+        // --- CSV読み込み処理 ---
         function loadCSV(input) {
             const file = input.files[0];
             if (!file) return;
@@ -385,7 +387,7 @@
             updateDisplay();
         }
 
-        
+
         function toggleQuizMode() {
             // auto → (現状に合わせて反転) → 以後は固定方向で反転
             isShowingAnswer = false;
@@ -400,7 +402,7 @@
             updateDisplay();
         }
 
-let speechPrimed = false;
+        let speechPrimed = false;
 
         function primeSpeechOnce() {
             // iPad/iPhone等で「最初の1回だけ無音」になりがちな挙動を避けるための最小prime
