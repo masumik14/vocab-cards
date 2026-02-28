@@ -236,11 +236,11 @@
     <script>
         // ★★★ デフォルトデータ（ファイル読み込みがない場合に表示） ★★★
     const defaultData = [
-        { en: "tent or tents", jp: "テント", startMode: "en" },
+        { en: "tent(t)", jp: "テント", startMode: "en" },
         { en: "trash", jp: "ごみ，くず", startMode: "jp" },
         { en: "album", jp: "アルバム", startMode: "jp" },
         { en: "back", jp: "戻って，返して", startMode: "jp" },
-        { en: "beat or beating", jp: "どきどきする", startMode: "jp" },
+        { en: "beat(ing)", jp: "どきどきする", startMode: "jp" },
         { en: "these", jp: "これらの", startMode: "en" },
         { en: "I’d", jp: "I would の短縮形", startMode: "en" },
         { en: "pleasure", jp: "楽しみ，喜び", startMode: "jp" },
@@ -427,9 +427,9 @@
 
             if (currentList.length === 0) return;
             const item = currentList[currentIndex];
-            const text = (item.en || "").trim();
+            const rawText = (item.en || "").trim();
 
-            if (!text) return;
+            if (!rawText) return;
 
             // ★最小prime（最初の1回だけ）
             const didPrime = primeSpeechOnce();
@@ -439,19 +439,51 @@
                 speechSynthesis.cancel();
             }
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = speechRate; // 速度
+            // 括弧の有無に応じて読み上げテキストを用意
+            const hasParen = /[()]/.test(rawText);
+            const baseText = rawText
+                .replace(/\([^)]*\)/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+            const fullText = rawText
+                .replace(/[()]/g, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
 
-            // iPad/iPhoneで日本語混じりにならないよう、明示的に英語の声を探す（念のため）
-            // ※環境により初回は空配列のことがあるため、見つかった時だけ適用
-            const voices = speechSynthesis.getVoices();
-            const enVoice = voices.find(v => v.lang === 'en-US');
-            if (enVoice) {
-                utterance.voice = enVoice;
+            // 音声設定を適用して発話を作るヘルパー
+            const makeUtterance = (t) => {
+                const u = new SpeechSynthesisUtterance(t);
+                u.lang = 'en-US';
+                u.rate = speechRate;
+                const voices = speechSynthesis.getVoices();
+                const enVoice = voices.find(v => v.lang === 'en-US');
+                if (enVoice) u.voice = enVoice;
+                return u;
+            };
+
+            // セッションIDで連打時のぶら下がりを防ぐ
+            if (!window.__speakSessionId) window.__speakSessionId = 0;
+            const sessionId = ++window.__speakSessionId;
+
+            const speakFull = () => {
+                if (window.__speakSessionId !== sessionId) return;
+                if (!fullText) return;
+                const u2 = makeUtterance(fullText);
+                speechSynthesis.speak(u2);
+            };
+
+            if (hasParen && baseText && baseText !== fullText) {
+                const u1 = makeUtterance(baseText);
+                u1.onend = () => {
+                    if (window.__speakSessionId !== sessionId) return;
+                    setTimeout(speakFull, 1000);
+                };
+                speechSynthesis.speak(u1);
+            } else {
+                // 括弧なし、または有効な基底形が作れない場合は通常読み上げ
+                const u = makeUtterance(fullText || rawText);
+                speechSynthesis.speak(u);
             }
-
-            speechSynthesis.speak(utterance);
         }
 
 
