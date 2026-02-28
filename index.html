@@ -18,26 +18,16 @@
             color: #333;
             touch-action: manipulation;
             padding: 10px;
+            box-sizing: border-box;
         }
 
-        /* 管理用エリア（CSV読み込みなど） */
-        .admin-area {
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background: #fff;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: #666;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            width: 90%;
-            max-width: 500px;
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
 
-        input[type="file"] {
-            margin-top: 5px;
-            max-width: 100%;
-        }
+        /* 管理用エリアは機能削減により削除 */
 
         .card {
             background-color: white;
@@ -68,31 +58,13 @@
             left: 20px;
             background: #ecf0f1;
             color: #7f8c8d;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 12px;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             font-weight: bold;
         }
 
-        .speaker-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 2rem;
-            color: #3498db;
-            background: #eaf6ff;
-            width: 50px;
-            height: 50px;
-            line-height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.2s;
-            z-index: 10;
-        }
-
-        .speaker-icon:hover {
-            background: #d0e9ff;
-        }
+        /* 右上スピーカーは廃止 */
 
         .card-content {
             font-size: 2.8rem;
@@ -107,11 +79,14 @@
         }
 
         .card-sub {
-            font-size: 1.6rem;
+            /* 答えは少し大きめに */
+            font-size: 1.9rem;
+            line-height: 1.3;
             color: #e74c3c;
-            min-height: 1.5em;
+            min-height: 2.0em;
             font-weight: bold;
             width: 100%;
+            word-break: break-word;
         }
 
         .hint {
@@ -131,8 +106,13 @@
             justify-content: center;
         }
 
+        /* 下部ナビのボタン幅/高さを揃える */
+        .bottom-controls button {
+            flex: 1 1 0;
+        }
+
         button {
-            padding: 15px 30px;
+            padding: 0 20px;
             font-size: 1.1rem;
             cursor: pointer;
             border: none;
@@ -140,6 +120,11 @@
             background-color: #3498db;
             color: white;
             font-weight: bold;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
         button:hover {
@@ -154,49 +139,73 @@
         .top-controls {
             margin-bottom: 15px;
             display: grid;
-            grid-template-columns: 1fr auto auto;
+            grid-template-columns: 1fr;
             gap: 12px;
             align-items: center;
+            justify-items: center;
+            /* center the control horizontally */
         }
 
         .rate-control {
             display: flex;
             align-items: center;
+            justify-content: center;
+            /* center items inside the pill */
             gap: 10px;
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             color: #666;
             background: #fff;
-            padding: 10px 14px;
+            padding: 0 20px;
             border-radius: 12px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             min-width: 0;
-            /* allow shrink within grid */
+            text-align: center;
+            width: 100%;
+            min-height: 56px;
+            box-sizing: border-box;
+            font-weight: bold;
         }
 
         .rate-control input[type="range"] {
-            width: 180px;
+            flex: 1 1 auto;
+            min-width: 100px;
             max-width: 100%;
         }
 
-        /* Top buttons: consistent height */
-        .top-controls button {
-            height: 44px;
-            padding: 0 22px;
-            white-space: nowrap;
+        #rateValue {
+            display: inline-block;
+            width: 40px;
+            text-align: left;
         }
+
+        /* 読み上げボタンを上部のピルと統一 */
+        .speak-button {
+            width: 100%;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #fff;
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .speak-button:hover {
+            background: #f7fafc;
+        }
+
+        /* トップエリアは速度設定のみ */
 
         /* Small screens: stack neatly */
         @media (max-width: 420px) {
             .top-controls {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .top-controls .rate-control {
-                grid-column: 1 / -1;
-            }
-
-            .top-controls button {
-                width: 100%;
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -204,52 +213,44 @@
 
 <body>
 
-    <div class="admin-area">
-        <label for="csvFile">📂 別の単語リスト(CSV)を読み込む</label><br>
-        <input type="file" id="csvFile" accept=".csv" onchange="loadCSV(this)">
-    </div>
-
-
     <div class="controls top-controls">
         <label class="rate-control">
             Speed
             <input type="range" min="0.6" max="1.0" step="0.05" value="0.8" oninput="setSpeechRate(this.value)">
             <span id="rateValue">0.8</span>
         </label>
-        <button class="secondary" onclick="shuffleCards()">シャッフル</button>
-        <button class="secondary" onclick="toggleQuizMode()">出題反転</button>
+        <button class="speak-button" onclick="playAudio()">🔊 読み上げ</button>
     </div>
 
     <div class="card" onclick="flipCard()">
         <div class="label-badge" id="typeLabel">問題</div>
-        <div class="speaker-icon" onclick="playAudio(event)">🔊</div>
         <div class="card-content" id="question">Loading...</div>
         <div class="card-sub" id="answer"></div>
         <div class="hint">タップして答えを見る</div>
     </div>
 
-    <div class="controls">
+    <div class="controls bottom-controls">
         <button class="secondary" onclick="prevCard()">戻る</button>
-        <button onclick="nextCard()">次へ (Next)</button>
+        <button onclick="nextCard()">次へ</button>
     </div>
 
     <script>
         // ★★★ デフォルトデータ（ファイル読み込みがない場合に表示） ★★★
-    const defaultData = [
-        { en: "ran", jp: "run（走る）の過去形", startMode: "jp" },
-        { en: "relay", jp: "リレー競走", startMode: "en" },
-        { en: "runner", jp: "走者", startMode: "jp" },
-        { en: "won", jp: "win（勝つ）の過去形", startMode: "en" },
-        { en: "anything", jp: "[否定文で] 何も（…ない）", startMode: "jp" },
-        { en: "ask(ed)", jp: "…を［に］たずねる，質問する", startMode: "jp" },
-        { en: "away", jp: "はなれて，去って", startMode: "en" },
-        { en: "became", jp: "become（…になる）の過去形", startMode: "en" },
-        { en: "become", jp: "…になる", startMode: "jp" },
-        { en: "blind", jp: "目の不自由な", startMode: "jp" },
-        { en: "bought", jp: "buy（買う）の過去形", startMode: "en" },
-        { en: "could", jp: "can（…できる）の過去形", startMode: "jp" },
-        { en: "dollar(s)", jp: "ドル", startMode: "en" },
-    ];
+        const defaultData = [
+            { en: "ran", jp: "run（走る）の過去形", startMode: "jp" },
+            { en: "relay", jp: "リレー競走", startMode: "en" },
+            { en: "runner", jp: "走者", startMode: "jp" },
+            { en: "won", jp: "win（勝つ）の過去形", startMode: "en" },
+            { en: "anything", jp: "[否定文で] 何も（…ない）", startMode: "jp" },
+            { en: "ask(ed)", jp: "…を［に］たずねる，質問する", startMode: "jp" },
+            { en: "away", jp: "はなれて，去って", startMode: "en" },
+            { en: "became", jp: "become（…になる）の過去形", startMode: "en" },
+            { en: "become", jp: "…になる", startMode: "jp" },
+            { en: "blind", jp: "目の不自由な", startMode: "jp" },
+            { en: "bought", jp: "buy（買う）の過去形", startMode: "en" },
+            { en: "could", jp: "can（…できる）の過去形", startMode: "jp" },
+            { en: "dollar(s)", jp: "ドル", startMode: "en" },
+        ];
 
         let currentList = [...defaultData];
         let currentIndex = 0;
@@ -264,50 +265,7 @@
             const el = document.getElementById('rateValue');
             if (el) el.textContent = v;
         }
-        // 出題方向（auto=単語ごとのstartMode、en2ja=英→日固定、ja2en=日→英固定）
-        let quizMode = 'auto';
-        // --- CSV読み込み処理 ---
-        function loadCSV(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const text = e.target.result;
-                parseCSV(text);
-            };
-            reader.readAsText(file);
-        }
-
-        function parseCSV(text) {
-            const newData = [];
-            const lines = text.split(/\r\n|\n/);
-
-            lines.forEach(line => {
-                if (!line.trim()) return;
-                const cols = line.split(',');
-                if (cols.length >= 2) {
-                    newData.push({
-                        en: cols[0].trim(),
-                        jp: cols[1].trim(),
-                        startMode: (cols[2] && cols[2].trim() === 'en') ? 'en' : 'jp'
-                    });
-                }
-            });
-
-            if (newData.length > 0) {
-                currentList = [...newData];
-                currentIndex = 0;
-                resetCard();
-                // 読み込み完了メッセージ
-                alert(`CSVファイルを読み込みました！\n全${newData.length}単語に切り替わります。`);
-                // 入力をクリア（同じファイルを再読み込みできるように）
-                document.getElementById('csvFile').value = "";
-            } else {
-                alert("うまく読み込めませんでした。CSVの中身を確認してください。");
-            }
-        }
-        // -----------------------
+        // 出題方向は単語ごとのstartModeに従う（機能簡素化）
 
         function updateDisplay() {
             if (currentList.length === 0) return;
@@ -321,11 +279,8 @@
             let answerText = "";
             let isJpQuestion = false;
 
-            // 出題方向を決定（quizModeがautoの場合のみ、単語ごとのstartModeを使う）
-            let mode = quizMode;
-            if (mode === 'auto') {
-                mode = (item.startMode === 'jp') ? 'ja2en' : 'en2ja';
-            }
+            // 出題方向を決定（単語ごとのstartModeのみ）
+            let mode = (item.startMode === 'jp') ? 'ja2en' : 'en2ja';
 
             if (mode === 'ja2en') {
                 questionText = item.jp;
@@ -371,36 +326,11 @@
             updateDisplay();
         }
 
-
-        function shuffleCards() {
-            for (let i = currentList.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [currentList[i], currentList[j]] = [currentList[j], currentList[i]];
-            }
-            currentIndex = 0;
-            resetCard();
-            alert("シャッフルしました！");
-        }
-
         function resetCard() {
             isShowingAnswer = false;
             updateDisplay();
         }
 
-
-        function toggleQuizMode() {
-            // auto → (現状に合わせて反転) → 以後は固定方向で反転
-            isShowingAnswer = false;
-
-            if (quizMode === 'auto') {
-                const item = currentList[currentIndex];
-                const current = (item && item.startMode === 'jp') ? 'ja2en' : 'en2ja';
-                quizMode = (current === 'ja2en') ? 'en2ja' : 'ja2en';
-            } else {
-                quizMode = (quizMode === 'ja2en') ? 'en2ja' : 'ja2en';
-            }
-            updateDisplay();
-        }
 
         let speechPrimed = false;
 
@@ -423,7 +353,8 @@
         }
 
         function playAudio(event) {
-            event.stopPropagation(); // カードが裏返るのを防ぐ
+            // カード上/外部ボタン両対応
+            if (event && event.stopPropagation) event.stopPropagation();
 
             if (currentList.length === 0) return;
             const item = currentList[currentIndex];
