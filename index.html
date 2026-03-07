@@ -225,35 +225,43 @@
         let isShowingAnswer = false;
 
         function parseCsvLine(line) {
-            const parts = line.split(',');
-            if (parts.length < 3) return null;
+            const match = line.match(/^([^,]+),"(.*)",([^,]+)$/);
+            if (!match) return null;
 
-            const startMode = parts.pop().trim();
-            const en = (parts.shift() || "").trim();
-            const jp = parts.join(',').trim();
+            const en = match[1].trim();
+            const jp = match[2].trim().replace(/""/g, '"');
+            const rawStartMode = match[3].trim().toLowerCase();
+            const startMode = (rawStartMode === "ja")
+                ? "ja"
+                : (rawStartMode === "en" ? "en" : "");
 
             if (!en || !jp || !startMode) return null;
 
-            return {
-                en,
-                jp,
-                startMode: startMode === "jp" ? "jp" : "en"
-            };
+            return { en, jp, startMode };
         }
 
-        function showEmptyState() {
+        function showEmptyState(title = "単語データがありません", detail = "words.csv を確認してください") {
             const qEl = document.getElementById('question');
             const aEl = document.getElementById('answer');
             const labelEl = document.getElementById('typeLabel');
 
-            qEl.textContent = "単語データがありません";
+            qEl.textContent = title;
             qEl.classList.add("jp-text");
-            aEl.textContent = "words.csv を確認してください";
+            aEl.textContent = detail;
             labelEl.textContent = "読込エラー";
         }
 
         async function loadWordList() {
             const csvUrl = "./words.csv?v=" + Date.now();
+
+            currentList = [];
+            currentIndex = 0;
+            isShowingAnswer = false;
+
+            if (window.location.protocol === "file:") {
+                showEmptyState("ローカル直開きでは読めません", "GitHub Pages かローカルサーバで開いてください");
+                return;
+            }
 
             try {
                 const response = await fetch(csvUrl, { cache: "no-store" });
@@ -263,21 +271,45 @@
                 }
 
                 const text = await response.text();
-                currentList = text
+                const lines = text
                     .split(/\r?\n/)
                     .map(line => line.trim())
-                    .filter(Boolean)
-                    .map(parseCsvLine)
                     .filter(Boolean);
+
+                const hasHeader = lines.length > 0 && lines[0].toLowerCase() === "en,jp,startmode";
+                const dataLines = hasHeader ? lines.slice(1) : lines;
+                const invalidLines = [];
+                const parsedRows = [];
+
+                dataLines.forEach((line, index) => {
+                    const row = parseCsvLine(line);
+                    if (row) {
+                        parsedRows.push(row);
+                    } else {
+                        invalidLines.push(index + (hasHeader ? 2 : 1));
+                    }
+                });
+
+                if (parsedRows.length === 0) {
+                    showEmptyState("CSVに単語データがありません", "ヘッダの下にデータを入れてください");
+                    return;
+                }
+
+                if (invalidLines.length > 0) {
+                    showEmptyState("CSV形式エラーがあります", invalidLines.join(', ') + "行目を確認してください");
+                    return;
+                }
+
+                currentList = parsedRows;
             } catch (error) {
                 console.warn("CSV load failed.", error);
-                currentList = [];
+                showEmptyState("単語データを読めませんでした", "words.csv を確認してください");
+                return;
             }
 
-            currentIndex = 0;
-            isShowingAnswer = false;
             updateDisplay();
         }
+
         let speechRate = 0.8;
         function setSpeechRate(v) {
             speechRate = Number(v);
@@ -299,7 +331,7 @@
             let questionText = "";
             let answerText = "";
             let isJpQuestion = false;
-            let mode = (item.startMode === 'jp') ? 'ja2en' : 'en2ja';
+            let mode = (item.startMode === 'ja') ? 'ja2en' : 'en2ja';
 
             if (mode === 'ja2en') {
                 questionText = item.jp;
@@ -345,29 +377,24 @@
             updateDisplay();
         }
 
-
         let speechPrimed = false;
 
         function primeSpeechOnce() {
-            // iPad/iPhone等で「最初の1回だけ無音」になりがちな挙動を避けるための最小prime
             if (speechPrimed) return false;
             speechPrimed = true;
 
             try {
-                // まずキューをクリアしてから、極短い発話を1回だけ流してエンジンを起動させる
                 speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(' ');
                 u.lang = 'en-US';
                 u.rate = 0.9;
                 speechSynthesis.speak(u);
             } catch (e) {
-                // speechSynthesis未対応/利用不可の環境では何もしない
             }
             return true;
         }
 
         function playAudio(event) {
-            // カード上/外部ボタン両対応
             if (event && event.stopPropagation) event.stopPropagation();
 
             if (currentList.length === 0) {
@@ -379,15 +406,12 @@
 
             if (!rawText) return;
 
-            // ★最小prime（最初の1回だけ）
             const didPrime = primeSpeechOnce();
 
-            // 2回目以降は、連打対策としてキューをクリア
             if (!didPrime) {
                 speechSynthesis.cancel();
             }
 
-            // 括弧の有無に応じて読み上げテキストを用意
             const hasParen = /[()]/.test(rawText);
             const baseText = rawText
                 .replace(/\([^)]*\)/g, '')
@@ -398,7 +422,6 @@
                 .replace(/\s{2,}/g, ' ')
                 .trim();
 
-            // 音声設定を適用して発話を作るヘルパー
             const makeUtterance = (t) => {
                 const u = new SpeechSynthesisUtterance(t);
                 u.lang = 'en-US';
@@ -409,7 +432,6 @@
                 return u;
             };
 
-            // セッションIDで連打時のぶら下がりを防ぐ
             if (!window.__speakSessionId) window.__speakSessionId = 0;
             const sessionId = ++window.__speakSessionId;
 
@@ -428,18 +450,20 @@
                 };
                 speechSynthesis.speak(u1);
             } else {
-                // 括弧なし、または有効な基底形が作れない場合は通常読み上げ
                 const u = makeUtterance(fullText || rawText);
                 speechSynthesis.speak(u);
             }
         }
 
-
-        // 初期表示
         loadWordList();
     </script>
+
 
 </body>
 
 </html>
+
+
+
+
 
