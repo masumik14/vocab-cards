@@ -148,10 +148,6 @@
             transition: background-color 0.15s;
         }
 
-        button:hover {
-            background-color: #2980b9;
-        }
-
         button.secondary {
             background-color: transparent;
             color: #95a5a6;
@@ -159,8 +155,13 @@
             font-weight: normal;
         }
 
-        button.secondary:hover {
-            background-color: #f2f3f4;
+        @media (hover: hover) {
+            button:hover {
+                background-color: #2980b9;
+            }
+            button.secondary:hover {
+                background-color: #f2f3f4;
+            }
         }
 
         .speak-controls {
@@ -188,13 +189,14 @@
             border-radius: 10px;
         }
 
-        .speak-controls .btn-speak:hover {
-            background: #aed6f1;
-        }
-
         .speak-controls .btn-speak:focus {
             outline: none;
-            background: #d6eaf8;
+        }
+
+        @media (hover: hover) {
+            .speak-controls .btn-speak:hover {
+                background: #aed6f1;
+            }
         }
 
         .bottom-controls {
