@@ -456,6 +456,7 @@
 
         function playAudio(event) {
             if (event && event.stopPropagation) event.stopPropagation();
+            if (event && event.currentTarget) event.currentTarget.blur();
 
             if (currentList.length === 0) {
                 showEmptyState();
