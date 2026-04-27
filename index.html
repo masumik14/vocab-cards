@@ -108,10 +108,29 @@
         }
 
         .hint {
-            font-size: 1rem;
-            color: #95a5a6;
+            font-size: 0.95rem;
+            color: #b2bec3;
             position: absolute;
-            bottom: 20px;
+            bottom: 50%;
+            transform: translateY(50%);
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .hint-icon {
+            font-size: 1.4rem;
+            opacity: 0.5;
+        }
+
+        .progress {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 12px;
+            letter-spacing: 0.05em;
         }
 
         .controls {
@@ -160,7 +179,7 @@
             max-width: 500px;
             margin-top: 20px;
             margin-bottom: 10px;
-            background: #fff;
+            background: #f0f7ff;
             border-radius: 16px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
             padding: 8px 16px 12px;
@@ -171,17 +190,22 @@
         }
 
         .speak-controls .btn-speak {
-            background: transparent;
-            color: #3498db;
+            background: #d6eaf8;
+            color: #2980b9;
             border: none;
             box-shadow: none;
             font-weight: bold;
             width: 100%;
+            border-radius: 10px;
         }
 
         .speak-controls .btn-speak:hover {
-            background: #eaf4fb;
-            border-radius: 10px;
+            background: #aed6f1;
+        }
+
+        .speak-controls .btn-speak:focus {
+            outline: none;
+            background: #d6eaf8;
         }
 
         .bottom-controls {
@@ -227,7 +251,7 @@
             <div class="card-face card-front">
                 <div class="label-badge" id="typeLabel"></div>
                 <div class="card-content" id="question">Loading...</div>
-                <div class="hint">タップして答えを見る</div>
+                <div class="hint"><span class="hint-icon">👆</span>タップして答えを見る</div>
             </div>
             <div class="card-face card-back">
                 <div class="label-badge" id="typeLabelBack"></div>
@@ -235,6 +259,8 @@
             </div>
         </div>
     </div>
+
+    <div class="progress" id="progress"></div>
 
     <div class="speak-controls">
         <button class="btn-speak" onclick="playAudio(event)">🔊 読み上げ</button>
@@ -392,6 +418,9 @@
             }
 
             aEl.textContent = answerText;
+
+            const progressEl = document.getElementById('progress');
+            if (progressEl) progressEl.textContent = `${currentIndex + 1} / ${currentList.length}`;
 
             cardEl.classList.remove('flipped');
             isShowingAnswer = false;
