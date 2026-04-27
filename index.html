@@ -26,11 +26,35 @@
         *::after {
             box-sizing: border-box;
         }
-        .card {
-            background-color: white;
+
+        .card-wrapper {
             width: 90%;
             max-width: 500px;
             height: 350px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+            user-select: none;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: white;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             display: flex;
@@ -39,14 +63,15 @@
             justify-content: center;
             text-align: center;
             padding: 20px;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.1s;
-            user-select: none;
+            transition: box-shadow 0.2s;
         }
 
-        .card:active {
-            transform: scale(0.98);
+        .card-wrapper:hover .card-face {
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
         }
 
         .label-badge {
@@ -60,6 +85,7 @@
             font-size: 1.1rem;
             font-weight: bold;
         }
+
         .card-content {
             font-size: 2.8rem;
             font-weight: bold;
@@ -76,7 +102,6 @@
             font-size: 1.9rem;
             line-height: 1.3;
             color: #e74c3c;
-            min-height: 2.0em;
             font-weight: bold;
             width: 100%;
             word-break: break-word;
@@ -92,15 +117,10 @@
         .controls {
             width: 90%;
             max-width: 500px;
-            margin-top: 30px;
+            margin-top: 20px;
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 10px;
             justify-content: center;
-        }
-
-        .bottom-controls button {
-            flex: 1 1 0;
         }
 
         button {
@@ -112,11 +132,12 @@
             background-color: #3498db;
             color: white;
             font-weight: bold;
-            min-height: 56px;
+            min-height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            transition: background-color 0.15s;
         }
 
         button:hover {
@@ -124,101 +145,111 @@
         }
 
         button.secondary {
-            background-color: #95a5a6;
+            background-color: transparent;
+            color: #95a5a6;
+            border: 2px solid #d5d8dc;
+            font-weight: normal;
         }
 
-
-        .top-controls {
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            align-items: center;
-            justify-items: center;
+        button.secondary:hover {
+            background-color: #f2f3f4;
         }
 
-        .rate-control {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: 1.1rem;
-            color: #666;
+        .speak-controls {
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+            margin-bottom: 10px;
             background: #fff;
-            padding: 0 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            min-width: 0;
-            text-align: center;
-            width: 100%;
-            min-height: 56px;
-            box-sizing: border-box;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+            padding: 8px 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .speak-controls .btn-speak {
+            background: transparent;
+            color: #3498db;
+            border: none;
+            box-shadow: none;
             font-weight: bold;
-        }
-
-        .rate-control input[type="range"] {
-            flex: 1 1 auto;
-            min-width: 100px;
-            max-width: 100%;
-        }
-
-        #rateValue {
-            display: inline-block;
-            width: 40px;
-            text-align: left;
-        }
-
-        .speak-button {
             width: 100%;
-            min-height: 56px;
+        }
+
+        .speak-controls .btn-speak:hover {
+            background: #eaf4fb;
+            border-radius: 10px;
+        }
+
+        .bottom-controls {
+            align-items: center;
+            margin-top: 0;
+        }
+
+        .bottom-controls .btn-prev {
+            flex: 1 1 0;
+        }
+
+        .bottom-controls .btn-next {
+            flex: 1 1 0;
+        }
+
+        .speed-control {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: #fff;
-            color: #3498db;
-            font-weight: bold;
-            font-size: 1.1rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            padding: 0 20px;
-            box-sizing: border-box;
+            font-size: 0.85rem;
+            color: #aaa;
         }
 
-        .speak-button:hover {
-            background: #f7fafc;
+        .speed-control input[type="range"] {
+            width: 120px;
+            accent-color: #3498db;
         }
 
-        @media (max-width: 420px) {
-            .top-controls {
-                grid-template-columns: 1fr;
-            }
+        #rateValue {
+            display: inline-block;
+            width: 28px;
+            text-align: left;
+            color: #888;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="controls top-controls">
-        <label class="rate-control">
+    <div class="card-wrapper" onclick="flipCard()">
+        <div class="card" id="card">
+            <div class="card-face card-front">
+                <div class="label-badge" id="typeLabel"></div>
+                <div class="card-content" id="question">Loading...</div>
+                <div class="hint">タップして答えを見る</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="label-badge" id="typeLabelBack"></div>
+                <div class="card-sub" id="answer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="speak-controls">
+        <button class="btn-speak" onclick="playAudio(event)">🔊 読み上げ</button>
+        <div class="speed-control">
             Speed
             <input type="range" min="0.6" max="1.0" step="0.05" value="0.8" oninput="setSpeechRate(this.value)">
             <span id="rateValue">0.8</span>
-        </label>
-        <button class="speak-button" onclick="playAudio()">🔊 読み上げ</button>
-    </div>
-
-    <div class="card" onclick="flipCard()">
-        <div class="label-badge" id="typeLabel">問題</div>
-        <div class="card-content" id="question">Loading...</div>
-        <div class="card-sub" id="answer"></div>
-        <div class="hint">タップして答えを見る</div>
+        </div>
     </div>
 
     <div class="controls bottom-controls">
-        <button class="secondary" onclick="prevCard()">戻る</button>
-        <button onclick="nextCard()">次へ</button>
+        <button class="secondary btn-prev" onclick="prevCard()">← 戻る</button>
+        <button class="btn-next" onclick="nextCard()">次へ →</button>
     </div>
+
     <script>
         let currentList = [];
         let currentIndex = 0;
@@ -244,11 +275,13 @@
             const qEl = document.getElementById('question');
             const aEl = document.getElementById('answer');
             const labelEl = document.getElementById('typeLabel');
+            const labelBackEl = document.getElementById('typeLabelBack');
 
             qEl.textContent = title;
             qEl.classList.add("jp-text");
             aEl.textContent = detail;
             labelEl.textContent = "読込エラー";
+            if (labelBackEl) labelBackEl.textContent = "読込エラー";
         }
 
         async function loadWordList() {
@@ -327,23 +360,29 @@
             const qEl = document.getElementById('question');
             const aEl = document.getElementById('answer');
             const labelEl = document.getElementById('typeLabel');
+            const labelBackEl = document.getElementById('typeLabelBack');
+            const cardEl = document.getElementById('card');
 
             let questionText = "";
             let answerText = "";
             let isJpQuestion = false;
             let mode = (item.startMode === 'ja') ? 'ja2en' : 'en2ja';
+            let labelText = "";
 
             if (mode === 'ja2en') {
                 questionText = item.jp;
                 answerText = item.en;
                 isJpQuestion = true;
-                labelEl.textContent = "日本語 → 英語";
+                labelText = "日本語 → 英語";
             } else {
                 questionText = item.en;
                 answerText = item.jp;
                 isJpQuestion = false;
-                labelEl.textContent = "英語 → 日本語";
+                labelText = "英語 → 日本語";
             }
+
+            labelEl.textContent = labelText;
+            if (labelBackEl) labelBackEl.textContent = labelText;
 
             qEl.textContent = questionText;
             if (isJpQuestion) {
@@ -351,16 +390,20 @@
             } else {
                 qEl.classList.remove("jp-text");
             }
-            aEl.textContent = isShowingAnswer ? answerText : "";
+
+            aEl.textContent = answerText;
+
+            cardEl.classList.remove('flipped');
+            isShowingAnswer = false;
         }
 
         function flipCard() {
             isShowingAnswer = !isShowingAnswer;
-            updateDisplay();
+            const cardEl = document.getElementById('card');
+            cardEl.classList.toggle('flipped', isShowingAnswer);
         }
 
         function nextCard() {
-            isShowingAnswer = false;
             currentIndex++;
             if (currentIndex >= currentList.length) {
                 currentIndex = 0;
@@ -369,7 +412,6 @@
         }
 
         function prevCard() {
-            isShowingAnswer = false;
             currentIndex--;
             if (currentIndex < 0) {
                 currentIndex = currentList.length - 1;
@@ -458,12 +500,6 @@
         loadWordList();
     </script>
 
-
 </body>
 
 </html>
-
-
-
-
-
