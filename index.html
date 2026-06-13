@@ -42,7 +42,7 @@
 
         .card {
             width: 100%;
-            min-height: 350px;
+            height: clamp(360px, 58svh, 430px);
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -59,6 +59,7 @@
         }
 
         .label-badge {
+            flex: 0 0 auto;
             align-self: flex-start;
             background: #ecf0f1;
             color: #7f8c8d;
@@ -70,11 +71,12 @@
         }
 
         .question-panel {
-            flex: 1 1 auto;
-            min-height: 130px;
+            flex: 1 1 0;
+            min-height: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         .card-content {
@@ -83,6 +85,7 @@
             width: 100%;
             line-height: 1.2;
             word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .card-content.jp-text {
@@ -90,7 +93,7 @@
         }
 
         .answer-panel {
-            min-height: 118px;
+            flex: 0 0 126px;
             border-top: 1px solid #ecf0f1;
             margin-top: 24px;
             padding-top: 22px;
@@ -99,6 +102,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
+            overflow: hidden;
         }
 
         .card-sub {
@@ -108,6 +112,7 @@
             font-weight: bold;
             width: 100%;
             word-break: break-word;
+            overflow-wrap: anywhere;
             opacity: 0;
             transform: translateY(6px);
             transition: opacity 0.22s ease, transform 0.22s ease;
@@ -128,7 +133,7 @@
         .progress {
             font-size: 0.9rem;
             color: #aaa;
-            margin-top: 12px;
+            margin: 0 0 8px;
             letter-spacing: 0.05em;
         }
 
@@ -378,6 +383,39 @@
             if (el) el.textContent = v;
         }
 
+        function fitTextToBox(textEl, boxEl, maxRem, minRem, availableHeight) {
+            if (!textEl || !boxEl) return;
+
+            const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+            let sizePx = maxRem * rootFontSize;
+            const minPx = minRem * rootFontSize;
+            const maxHeight = availableHeight || boxEl.clientHeight;
+
+            textEl.style.fontSize = `${sizePx}px`;
+
+            while (
+                sizePx > minPx
+                && (textEl.scrollHeight > maxHeight || textEl.scrollWidth > boxEl.clientWidth)
+            ) {
+                sizePx -= 1;
+                textEl.style.fontSize = `${sizePx}px`;
+            }
+        }
+
+        function fitCardText() {
+            const qEl = document.getElementById('question');
+            const aEl = document.getElementById('answer');
+            const qBoxEl = document.querySelector('.question-panel');
+            const aBoxEl = document.querySelector('.answer-panel');
+            const hintEl = document.getElementById('hint');
+            const answerHeight = aBoxEl
+                ? Math.max(48, aBoxEl.clientHeight - (hintEl ? hintEl.offsetHeight : 0) - 16)
+                : undefined;
+
+            fitTextToBox(qEl, qBoxEl, qEl && qEl.classList.contains('jp-text') ? 2 : 2.8, 1.35);
+            fitTextToBox(aEl, aBoxEl, 1.9, 1.15, answerHeight);
+        }
+
         function updateDisplay() {
             if (currentList.length === 0) {
                 showEmptyState();
@@ -426,6 +464,7 @@
             cardEl.classList.remove('answer-visible');
             if (hintEl) hintEl.textContent = "タップして答えを見る";
             isShowingAnswer = false;
+            requestAnimationFrame(fitCardText);
         }
 
         function flipCard() {
@@ -535,6 +574,7 @@
         }
 
         loadWordList();
+        window.addEventListener('resize', fitCardText);
     </script>
 
 </body>
