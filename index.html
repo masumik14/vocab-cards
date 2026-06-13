@@ -37,72 +37,68 @@
         .card-wrapper {
             width: 90%;
             max-width: 500px;
-            height: 350px;
-            perspective: 1000px;
             cursor: pointer;
         }
 
         .card {
             width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.5s ease;
-            user-select: none;
-        }
-
-        .card.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+            min-height: 350px;
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 22px;
             transition: box-shadow 0.2s;
+            user-select: none;
         }
 
-        .card-wrapper:hover .card-face {
+        .card-wrapper:hover .card {
             box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .card-back {
-            transform: rotateY(180deg);
-        }
-
         .label-badge {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            align-self: flex-start;
             background: #ecf0f1;
             color: #7f8c8d;
             padding: 8px 16px;
             border-radius: 12px;
             font-size: 1.1rem;
             font-weight: bold;
+            margin-bottom: 22px;
+        }
+
+        .question-panel {
+            flex: 1 1 auto;
+            min-height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-content {
             font-size: 2.8rem;
             font-weight: bold;
-            margin-bottom: 20px;
             width: 100%;
             line-height: 1.2;
+            word-break: break-word;
         }
 
         .card-content.jp-text {
             font-size: 2rem;
+        }
+
+        .answer-panel {
+            min-height: 118px;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 24px;
+            padding-top: 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
         .card-sub {
@@ -112,14 +108,21 @@
             font-weight: bold;
             width: 100%;
             word-break: break-word;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
         }
 
         .hint {
             font-size: 0.95rem;
             color: #b2bec3;
-            position: absolute;
-            bottom: 20px;
             pointer-events: none;
+            transition: opacity 0.22s ease;
+        }
+
+        .card.answer-visible .card-sub {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .progress {
@@ -248,14 +251,13 @@
 
     <div class="card-wrapper" onclick="flipCard()">
         <div class="card" id="card">
-            <div class="card-face card-front">
-                <div class="label-badge" id="typeLabel"></div>
+            <div class="label-badge" id="typeLabel"></div>
+            <div class="question-panel">
                 <div class="card-content" id="question">Loading...</div>
-                <div class="hint">タップして答えを見る</div>
             </div>
-            <div class="card-face card-back">
-                <div class="label-badge" id="typeLabelBack"></div>
+            <div class="answer-panel">
                 <div class="card-sub" id="answer"></div>
+                <div class="hint" id="hint">タップして答えを見る</div>
             </div>
         </div>
     </div>
@@ -299,13 +301,15 @@
             const qEl = document.getElementById('question');
             const aEl = document.getElementById('answer');
             const labelEl = document.getElementById('typeLabel');
-            const labelBackEl = document.getElementById('typeLabelBack');
+            const cardEl = document.getElementById('card');
+            const hintEl = document.getElementById('hint');
 
             qEl.textContent = title;
             qEl.classList.add("jp-text");
             aEl.textContent = detail;
             labelEl.textContent = "読込エラー";
-            if (labelBackEl) labelBackEl.textContent = "読込エラー";
+            if (cardEl) cardEl.classList.add('answer-visible');
+            if (hintEl) hintEl.textContent = "";
         }
 
         async function loadWordList() {
@@ -384,8 +388,8 @@
             const qEl = document.getElementById('question');
             const aEl = document.getElementById('answer');
             const labelEl = document.getElementById('typeLabel');
-            const labelBackEl = document.getElementById('typeLabelBack');
             const cardEl = document.getElementById('card');
+            const hintEl = document.getElementById('hint');
 
             let questionText = "";
             let answerText = "";
@@ -406,7 +410,6 @@
             }
 
             labelEl.textContent = labelText;
-            if (labelBackEl) labelBackEl.textContent = labelText;
 
             qEl.textContent = questionText;
             if (isJpQuestion) {
@@ -420,14 +423,17 @@
             const progressEl = document.getElementById('progress');
             if (progressEl) progressEl.textContent = `${currentIndex + 1} / ${currentList.length}`;
 
-            cardEl.classList.remove('flipped');
+            cardEl.classList.remove('answer-visible');
+            if (hintEl) hintEl.textContent = "タップして答えを見る";
             isShowingAnswer = false;
         }
 
         function flipCard() {
             isShowingAnswer = !isShowingAnswer;
             const cardEl = document.getElementById('card');
-            cardEl.classList.toggle('flipped', isShowingAnswer);
+            const hintEl = document.getElementById('hint');
+            cardEl.classList.toggle('answer-visible', isShowingAnswer);
+            if (hintEl) hintEl.textContent = isShowingAnswer ? "タップして答えを隠す" : "タップして答えを見る";
         }
 
         function nextCard() {
