@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>単語帳</title>
+    <meta name="theme-color" content="#f0f4f8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="単語帳">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="./icon.png">
+    <link rel="icon" type="image/png" href="./icon.png">
+    <link rel="manifest" href="./manifest.webmanifest">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
@@ -475,15 +482,18 @@
                 speechSynthesis.cancel();
             }
 
+            const formatSpeechText = (text) => text
+                .replace(/\s*[-;]\s*/g, ', ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+
             const hasParen = /[()]/.test(rawText);
-            const baseText = rawText
+            const baseText = formatSpeechText(rawText
                 .replace(/\([^)]*\)/g, '')
-                .replace(/\s{2,}/g, ' ')
-                .trim();
-            const fullText = rawText
+            );
+            const fullText = formatSpeechText(rawText
                 .replace(/[()]/g, '')
-                .replace(/\s{2,}/g, ' ')
-                .trim();
+            );
 
             const makeUtterance = (t) => {
                 const u = new SpeechSynthesisUtterance(t);
