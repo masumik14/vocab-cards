@@ -287,12 +287,35 @@
         let isShowingAnswer = false;
 
         function parseCsvLine(line) {
-            const match = line.match(/^([^,]+),"(.*)",([^,]+)$/);
-            if (!match) return null;
+            const fields = [];
+            let field = "";
+            let inQuotes = false;
 
-            const en = match[1].trim();
-            const jp = match[2].trim().replace(/""/g, '"');
-            const rawStartMode = match[3].trim().toLowerCase();
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        field += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === "," && !inQuotes) {
+                    fields.push(field.trim());
+                    field = "";
+                } else {
+                    field += char;
+                }
+            }
+
+            if (inQuotes) return null;
+            fields.push(field.trim());
+            if (fields.length < 3) return null;
+
+            const rawStartMode = fields.pop().toLowerCase();
+            const jp = fields.pop();
+            const en = fields.join(", ");
             const startMode = (rawStartMode === "ja")
                 ? "ja"
                 : (rawStartMode === "en" ? "en" : "");
